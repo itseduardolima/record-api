@@ -149,6 +149,34 @@ app.post('/records', upload.single('image'), async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /records/{id}:
+ *   get:
+ *     summary: Get a record by ID
+ *     tags: [Records]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Record ID
+ *     responses:
+ *       200:
+ *         description: Record found
+ *       500:
+ *         description: Server error
+ */
+app.get('/records/:id', async (req, res) => {
+  try {
+    const response = await notion.pages.retrieve({ page_id: req.params.id });
+    res.json(response);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
   console.log(`Swagger documentation available at http://localhost:${port}/swagger`);
