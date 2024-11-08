@@ -228,6 +228,37 @@ app.put('/records/:id', upload.single('image'), async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /records/{id}:
+ *   delete:
+ *     summary: Delete a record by ID
+ *     tags: [Records]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Record ID
+ *     responses:
+ *       204:
+ *         description: Record deleted successfully
+ *       500:
+ *         description: Server error
+ */
+app.delete('/records/:id', async (req, res) => {
+  try {
+    await notion.pages.update({
+      page_id: req.params.id,
+      archived: true
+    });
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
   console.log(`Swagger documentation available at http://localhost:${port}/swagger`);
