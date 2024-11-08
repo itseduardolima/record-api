@@ -177,6 +177,57 @@ app.get('/records/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /records/{id}:
+ *   put:
+ *     summary: Update a record by ID
+ *     tags: [Records]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Record ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             $ref: '#/components/schemas/Record'
+ *     responses:
+ *       200:
+ *         description: Record updated successfully
+ *       500:
+ *         description: Server error
+ */
+app.put('/records/:id', upload.single('image'), async (req, res) => {
+  try {
+    const { id, company, campaign, content, description, plannedDate, where, language, imageContent } = req.body;
+    const imageUrl = req.file ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}` : null;
+
+    const response = await notion.pages.update({
+      page_id: req.params.id,
+      properties: {
+        ID: { number: parseInt(id) },
+        Company: { title: [{ text: { content: company } }] },
+        Campaign: { rich_text: [{ text: { content: campaign } }] },
+        Content: { rich_text: [{ text: { content: content } }] },
+        Description: { rich_text: [{ text: { content: description } }] },
+        PlannedDate: { date: { start: plannedDate } },
+        Where: { rich_text: [{ text: { content: where } }] },
+        Language: { select: { name: language } },
+        Image: { files: imageUrl ? [{ type: "external", name: "Campaign Image", external: { url: imageUrl } }] : [] },
+        "image content": { rich_text: [{ text: { content: imageContent || '' } }] },
+      }
+    });
+    res.json(response);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
   console.log(`Swagger documentation available at http://localhost:${port}/swagger`);
